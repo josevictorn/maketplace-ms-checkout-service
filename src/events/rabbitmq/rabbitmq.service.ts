@@ -87,7 +87,7 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
   async publishMessage(
     exchange: string,
     routingKey: string,
-    message: any,
+    message: unknown,
   ): Promise<void> {
     try {
       if (!this.channel) {
@@ -119,6 +119,60 @@ export class RabbitmqService implements OnModuleInit, OnModuleDestroy {
       this.logger.debug(`Message content: ${JSON.stringify(message)}`);
     } catch (error) {
       this.logger.error('Failed to publish message to RabbitMQ', error);
+    }
+  }
+
+  async subscribeToQueue(
+    queueName: string,
+    exchange: string,
+    routingKey: string,
+    callback: (msg: any) => void,
+  ): Promise<void> {
+    try {
+      if (!this.channel) {
+        throw new Error('RabbitMQ channel is not initialized');
+      }
+
+      await this.channel.assertExchange(exchange, 'topic', { durable: true });
+
+      const queue = await this.channel.assertQueue(queueName, {
+        durable: true,
+        arguments: {
+          'x-message-ttl': 86400000, // Set message TTL to 24 hours
+          'x-max-length': 1000, // Set maximum queue length to 1000 messages
+        },
+      });
+
+      await this.channel.bindQueue(queue.queue, exchange, routingKey);
+
+      await this.channel.prefetch(1); // Process one message at a time
+
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises, @typescript-eslint/require-await
+      await this.channel.consume(queue.queue, async (msg) => {
+        if (msg) {
+          try {
+            const message: unknown = JSON.parse(msg.content.toString());
+
+            this.logger.log(`Received message from queue "${queueName}"`);
+            this.logger.debug(`Message content: ${JSON.stringify(message)}`);
+
+            callback(message);
+
+            this.channel.ack(msg); // Acknowledge the message after processing
+          } catch (error) {
+            this.logger.error(
+              `Failed to process message from queue "${queueName}"`,
+              error,
+            );
+            this.channel.nack(msg, false, false); // Reject the message without requeueing
+          }
+        }
+      });
+      this.logger.log(
+        `Subscribed to queue "${queueName}" with routing key "${routingKey}"`,
+      );
+    } catch (error) {
+      this.logger.error(`Failed to subscribe to queue ${queueName}`, error);
     }
   }
 }
