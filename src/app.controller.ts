@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AppService } from './app.service';
-import type { PaymentQueueService } from './events/payment-queue/payment-queue.service';
+import { PaymentQueueService } from './events/payment-queue/payment-queue.service';
 import type { PaymentOrderMessage } from './events/payment-queue.interface';
 
 @Controller()
