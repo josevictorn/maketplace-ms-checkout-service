@@ -32,7 +32,6 @@ export class AppController {
         },
       ],
       paymentMethod: body?.paymentMethod || 'credit_card',
-      description: body?.description || 'Mensagem de teste',
       createdAt: new Date().toISOString(),
     };
 
