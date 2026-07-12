@@ -23,8 +23,13 @@ export class CartController {
 
   @Get()
   async getCart(@Req() req: RequestWithUser) {
-    const userId = String(req.user.id);
-    return this.cartService.getCart(userId);
+    try {
+      const userId = String(req.user.id);
+      return await this.cartService.getCart(userId);
+    } catch (error) {
+      console.error('GET /cart ERROR:', error);
+      throw error;
+    }
   }
 
   @Post('items')
