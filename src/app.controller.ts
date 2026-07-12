@@ -1,46 +1,14 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { Public } from './auth/decorators/public.decorator';
-import { PaymentQueueService } from './events/payment-queue/payment-queue.service';
-import type { PaymentOrderMessage } from './events/payment-queue.interface';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private readonly paymentQueueService: PaymentQueueService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
   @Public()
   @Get()
   getHello(): string {
     return this.appService.getHello();
-  }
-
-  @Public()
-  @Post('test/send-message')
-  async testSendMessage(@Body() body?: Partial<PaymentOrderMessage>) {
-    const testMessage: PaymentOrderMessage = {
-      orderId: body?.orderId || `test-order-${Date.now()}`,
-      userId: body?.userId || 'test-user-123',
-      amount: body?.amount || 199.99,
-      items: body?.items || [
-        {
-          productId: 'product-1',
-          quantity: 2,
-          price: 99.99,
-        },
-      ],
-      paymentMethod: body?.paymentMethod || 'credit_card',
-      createdAt: new Date().toISOString(),
-    };
-
-    await this.paymentQueueService.publishPaymentOrder(testMessage);
-
-    return {
-      success: true,
-      message: 'Mensagem enviada para o RabbitMQ',
-      data: testMessage,
-    };
   }
 }
