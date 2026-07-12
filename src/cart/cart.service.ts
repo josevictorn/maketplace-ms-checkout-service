@@ -111,4 +111,24 @@ export class CartService {
     await this.cartRepository.save(cart);
     return this.cartRepository.findOneOrFail({ where: { id: cart.id } });
   }
+
+  async getActiveCartWithItems(userId: string): Promise<Cart> {
+    const cart = await this.cartRepository.findOne({
+      where: { userId, status: CartStatus.ACTIVE },
+    });
+
+    if (!cart) {
+      throw new BadRequestException('Carrinho vazio ou não encontrado');
+    }
+
+    if (!cart.items || cart.items.length === 0) {
+      throw new BadRequestException('Carrinho vazio ou não encontrado');
+    }
+
+    return cart;
+  }
+
+  async updateCartStatus(cartId: string, status: CartStatus): Promise<void> {
+    await this.cartRepository.update({ id: cartId }, { status });
+  }
 }

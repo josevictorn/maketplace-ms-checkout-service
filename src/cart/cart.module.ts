@@ -10,5 +10,6 @@ import { ProductsClientModule } from '../products-client/products-client.module'
   imports: [TypeOrmModule.forFeature([Cart, CartItem]), ProductsClientModule],
   controllers: [CartController],
   providers: [CartService],
+  exports: [TypeOrmModule, CartService],
 })
 export class CartModule {}
