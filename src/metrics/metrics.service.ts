@@ -6,6 +6,9 @@ export class MetricsService {
   private readonly httpRequestsTotal: promClient.Counter<string>;
   private readonly httpRequestDurationSeconds: promClient.Histogram<string>;
 
+  readonly ordersCreatedTotal: promClient.Counter<string>;
+  readonly rabbitmqMessagesPublishedTotal: promClient.Counter<string>;
+
   constructor() {
     promClient.collectDefaultMetrics();
 
@@ -20,6 +23,17 @@ export class MetricsService {
       help: 'Duration of HTTP requests in seconds',
       labelNames: ['method', 'route', 'status_code'],
       buckets: [0.1, 0.3, 0.5, 1, 1.5, 2, 5, 10],
+    });
+
+    this.ordersCreatedTotal = new promClient.Counter({
+      name: 'orders_created_total',
+      help: 'Total number of orders created',
+    });
+
+    this.rabbitmqMessagesPublishedTotal = new promClient.Counter({
+      name: 'rabbitmq_messages_published_total',
+      help: 'Total number of messages published to RabbitMQ',
+      labelNames: ['queue'],
     });
   }
 

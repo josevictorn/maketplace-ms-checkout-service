@@ -7,6 +7,7 @@ import { CartService } from '../cart/cart.service';
 import { PaymentQueueService } from '../events/payment-queue/payment-queue.service';
 import { CartStatus } from '../cart/enums/cart-status.enum';
 import { CheckoutDto } from '../cart/dto/checkout.dto';
+import { MetricsService } from '../metrics/metrics.service';
 
 @Injectable()
 export class OrdersService {
@@ -15,6 +16,7 @@ export class OrdersService {
     private readonly orderRepository: Repository<Order>,
     private readonly cartService: CartService,
     private readonly paymentQueueService: PaymentQueueService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async checkout(userId: string, dto: CheckoutDto): Promise<Order> {
@@ -29,6 +31,8 @@ export class OrdersService {
     });
 
     const savedOrder = await this.orderRepository.save(order);
+
+    this.metricsService.ordersCreatedTotal.inc();
 
     await this.cartService.updateCartStatus(cart.id, CartStatus.COMPLETED);
 
